@@ -2171,6 +2171,17 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
   data: function data(vm) {
     return {
@@ -2185,6 +2196,7 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
       oldGroupBy: null,
       displayed_items: {},
       userOptions: [],
+      totalColumnOptions: [],
       columnOptions: [],
       optionInput: null,
       selectedHeader: null,
@@ -2205,6 +2217,7 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
   },
   computed: {
     filteredHeaders: function filteredHeaders() {
+      console.log("this.headers");
       console.log(this.headers);
       return this.headers.filter(function (header) {
         return header.displayed;
@@ -2289,10 +2302,11 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
     }));
     console.log(this.tempSettings); // Колонки, которые мы можем добавить в список (исключим те, что уже добавлены)
 
+    this.totalColumnOptions = JSON.parse(this.companyFields);
     var headerTitles = this.headers.map(function (header) {
       return header.value;
     });
-    this.columnOptions = JSON.parse(this.companyFields).filter(function (option) {
+    this.columnOptions = this.totalColumnOptions.filter(function (option) {
       return !headerTitles.includes(option.title);
     });
     var minCommDate = new Date();
@@ -2422,8 +2436,13 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
       var optionIndex = this.columnOptions.findIndex(function (option) {
         return option.title == _this6.selectedHeader;
       });
+
+      if (optionIndex == -1) {
+        return;
+      }
+
       var newHeader = this.columnOptions[optionIndex];
-      this.$http.post("headers", {
+      this.$http.post("add_header", {
         header: newHeader,
         domain_id: local ? this.domainInfo.id : null,
         user_id: this.currentUser
@@ -2435,13 +2454,42 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
 
         _this6.headers.push(header);
 
-        _this6.optionInput = null;
+        _this6.optionInput = null; // TODO: вынести в updateColumnOptions
 
-        _this6.columnOptions.splice(optionIndex, 1);
+        var headerTitles = _this6.headers.map(function (header) {
+          return header.value;
+        });
+
+        _this6.columnOptions = _this6.totalColumnOptions.filter(function (option) {
+          return !headerTitles.includes(option.title);
+        });
+      });
+    },
+    removeColumn: function removeColumn(header) {
+      var _this7 = this;
+
+      this.$http.post("remove_header", {
+        header_id: header.id
+      }).then(function (response) {
+        _this7.headers = _this7.headers.filter(function (item) {
+          return item.id != header.id;
+        }); // TODO: вынести в updateColumnOptions
+
+        var headerTitles = _this7.headers.map(function (header) {
+          return header.value;
+        });
+
+        _this7.columnOptions = _this7.totalColumnOptions.filter(function (option) {
+          return !headerTitles.includes(option.title);
+        }); // TODO: вынести в updateTempSettings
+
+        _this7.tempSettings = _toConsumableArray(_this7.filteredHeaders.map(function (header) {
+          return header.value;
+        }));
       });
     },
     onGroupBy: function onGroupBy(arg) {
-      var _this7 = this;
+      var _this8 = this;
 
       this.displayed_items = {};
       this.groupedItems = [];
@@ -2453,10 +2501,10 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
       if (this.oldGroupBy) {
         // TODO: remove redundant code
         var headerIndex = this.headers.findIndex(function (header) {
-          return header.value == _this7.oldGroupBy;
+          return header.value == _this8.oldGroupBy;
         });
         var header = this.headers[headerIndex];
-        this.$delete(this.headers[headerIndex], 'filter');
+        this.$delete(this.headers[headerIndex], "filter");
       }
 
       this.oldGroupBy = arg;
@@ -2467,14 +2515,14 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
         });
 
         var _header = this.headers[_headerIndex];
-        this.$set(this.headers[_headerIndex], 'filter', function (value) {
-          if (!_this7.displayed_items[value] || _this7.displayed_items[value] == 0) {
-            _this7.displayed_items[value] = 1;
+        this.$set(this.headers[_headerIndex], "filter", function (value) {
+          if (!_this8.displayed_items[value] || _this8.displayed_items[value] == 0) {
+            _this8.displayed_items[value] = 1;
             return true;
           }
 
-          if (!_this7.groupedItems) return true;
-          return !_this7.groupedItems.includes(value);
+          if (!_this8.groupedItems) return true;
+          return !_this8.groupedItems.includes(value);
         });
         this.headers[_headerIndex] = _header;
 
@@ -2537,7 +2585,7 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, "\n.sticky-header[data-v-5bd01d73] {\r\n  position: -webkit-sticky;\r\n  position: sticky;\r\n  z-index: 2;\r\n  top: 0;\n}\n.sticky-group-header[data-v-5bd01d73] {\r\n  position: -webkit-sticky;\r\n  position: sticky;\r\n  z-index: 1;\r\n  top: 3rem;\r\n  background-color: #c7c7c7;\n}\n.v-data-table[data-v-5bd01d73] .v-data-table__wrapper {\r\n  overflow: unset;\n}\r\n", ""]);
+exports.push([module.i, "\n.sticky-header[data-v-5bd01d73] {\r\n  position: -webkit-sticky;\r\n  position: sticky;\r\n  z-index: 2;\r\n  top: 0;\n}\n.sticky-group-header[data-v-5bd01d73] {\r\n  position: -webkit-sticky;\r\n  position: sticky;\r\n  z-index: 1;\r\n  top: 3rem;\r\n  background-color: #c7c7c7;\n}\n.v-data-table[data-v-5bd01d73] .v-data-table__wrapper {\r\n  overflow: unset;\n}\n.v-input[data-v-5bd01d73] label {\r\n  margin-bottom: 0;\n}\r\n", ""]);
 
 // exports
 
@@ -2556,7 +2604,7 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, "\ntbody tr:nth-of-type(odd) {\r\n  background-color: rgba(0, 0, 0, 0.05);\n}\r\n", ""]);
+exports.push([module.i, "\ntbody tr:nth-of-type(odd) {\r\n  background-color: rgba(0, 0, 0, 0.05);\n}\n.inline-items {\r\n  display: flex;\n}\r\n", ""]);
 
 // exports
 
@@ -4658,25 +4706,55 @@ var render = function() {
                                           attrs: { cols: "12", md: "4" }
                                         },
                                         [
-                                          _c(
-                                            "v-item",
-                                            [
-                                              _c("v-checkbox", {
-                                                attrs: {
-                                                  label: header.text,
-                                                  value: header.value
-                                                },
-                                                model: {
-                                                  value: _vm.tempSettings,
-                                                  callback: function($$v) {
-                                                    _vm.tempSettings = $$v
+                                          _c("v-item", [
+                                            _c(
+                                              "div",
+                                              { staticClass: "inline-items" },
+                                              [
+                                                _c("v-checkbox", {
+                                                  staticClass: "ma-0 pa-0",
+                                                  attrs: {
+                                                    label: header.text,
+                                                    value: header.value,
+                                                    "hide-details": ""
                                                   },
-                                                  expression: "tempSettings"
-                                                }
-                                              })
-                                            ],
-                                            1
-                                          )
+                                                  model: {
+                                                    value: _vm.tempSettings,
+                                                    callback: function($$v) {
+                                                      _vm.tempSettings = $$v
+                                                    },
+                                                    expression: "tempSettings"
+                                                  }
+                                                }),
+                                                _vm._v(" "),
+                                                _c(
+                                                  "v-btn",
+                                                  {
+                                                    staticClass: "ml-1",
+                                                    attrs: {
+                                                      color: "error",
+                                                      size: "20",
+                                                      icon: ""
+                                                    },
+                                                    on: {
+                                                      click: function($event) {
+                                                        return _vm.removeColumn(
+                                                          header
+                                                        )
+                                                      }
+                                                    }
+                                                  },
+                                                  [
+                                                    _c("v-icon", [
+                                                      _vm._v("mdi-close")
+                                                    ])
+                                                  ],
+                                                  1
+                                                )
+                                              ],
+                                              1
+                                            )
+                                          ])
                                         ],
                                         1
                                       )
@@ -4808,7 +4886,7 @@ var render = function() {
                               attrs: { color: "green darken-1", text: "" },
                               on: { click: _vm.acceptSettings }
                             },
-                            [_vm._v("\n              Применить\n            ")]
+                            [_vm._v(" Применить ")]
                           )
                         ],
                         1

@@ -88,14 +88,22 @@
                 <v-item-group>
                   <v-row>
                     <v-col v-for="(header, i) in headers" :key="i" cols="12" md="4">
-                      <v-item>
-                        <v-checkbox
-                          v-model="tempSettings"
-                          :label="header.text"
-                          :value="header.value"
-                        >
-                        </v-checkbox>
-                      </v-item>
+                        <v-item>
+                          <div class = "inline-items">
+                              <v-checkbox
+                                v-model="tempSettings"
+                                :label="header.text"
+                                :value="header.value"
+                                hide-details
+                                
+                                class="ma-0 pa-0"
+                              >
+                              </v-checkbox>
+                              <v-btn color="error" size="20" icon @click="removeColumn(header)" class="ml-1">
+                                <v-icon>mdi-close</v-icon>
+                              </v-btn>
+                          </div>
+                        </v-item>
                     </v-col>
                   </v-row>
                 </v-item-group>
@@ -125,9 +133,7 @@
               </download-excel>
               <v-spacer></v-spacer>
               <v-btn color="red darken-1" text @click="cancelSettings"> Отменить </v-btn>
-              <v-btn color="green darken-1" text @click="acceptSettings">
-                Применить
-              </v-btn>
+              <v-btn color="green darken-1" text @click="acceptSettings"> Применить </v-btn>
             </v-card-actions>
           </v-card>
         </v-dialog>
@@ -172,17 +178,17 @@
                 <th :class="header.class" :key="header.value">
                   <span>{{ header.text }}</span>
                   <v-tooltip v-if="header.groupable" transition="none" bottom>
-                      <template v-slot:activator="{ on, attrs }">
-                          <v-btn 
-                              v-bind="attrs"
-                              v-on="on"
-                              @click.stop="props.on.group(header.value)" 
-                              icon
-                          >
-                              <v-icon>mdi-tray-full</v-icon>
-                          </v-btn>
-                      </template>
-                      <span>Группировать</span>
+                    <template v-slot:activator="{ on, attrs }">
+                      <v-btn
+                        v-bind="attrs"
+                        v-on="on"
+                        @click.stop="props.on.group(header.value)"
+                        icon
+                      >
+                        <v-icon>mdi-tray-full</v-icon>
+                      </v-btn>
+                    </template>
+                    <span>Группировать</span>
                   </v-tooltip>
                   <v-tooltip v-if="header.sortable" transition="none" bottom>
                     <template v-slot:activator="{ on, attrs }">
@@ -216,7 +222,12 @@
         <!-- Шапка группы -->
         <template v-slot:group.header="{ items, isOpen, toggle, remove, group }">
           <th class="sticky-group-header" colspan="100%">
-            <v-icon @click="toggle(); toggleItems(isOpen, group)">
+            <v-icon
+              @click="
+                toggle();
+                toggleItems(isOpen, group);
+              "
+            >
               {{ isOpen ? "mdi-minus" : "mdi-plus" }}
             </v-icon>
             {{ group }}: {{ groupCount[group] }}
@@ -246,7 +257,7 @@ export default {
     companies: [],
     headers: [],
     loading: false,
-    groupedItems: [], 
+    groupedItems: [],
 
     selectedColor: "blue",
     dialog: false,
@@ -256,6 +267,7 @@ export default {
     displayed_items: {},
 
     userOptions: [],
+    totalColumnOptions: [],
     columnOptions: [],
     optionInput: null,
     selectedHeader: null,
@@ -278,26 +290,29 @@ export default {
   }),
   computed: {
     filteredHeaders() {
+      console.log("this.headers");
       console.log(this.headers);
-      return this.headers.filter((header) => header.displayed).map((header) => {
-        let newHeader = {
-          text: header.text, 
-          value: header.value,
-          class: header.class, 
-          sortable: header.sortable,
-          groupable: header.groupable,
-          sort_order: header.sort_order,
-          options: {
-            user_id: header.user_id,
-          },
-        }
+      return this.headers
+        .filter((header) => header.displayed)
+        .map((header) => {
+          let newHeader = {
+            text: header.text,
+            value: header.value,
+            class: header.class,
+            sortable: header.sortable,
+            groupable: header.groupable,
+            sort_order: header.sort_order,
+            options: {
+              user_id: header.user_id,
+            },
+          };
 
-        if (header.filter) {
-          newHeader.filter = header.filter;
-        }
+          if (header.filter) {
+            newHeader.filter = header.filter;
+          }
 
-        return newHeader;
-      });
+          return newHeader;
+        });
     },
     sortedHeaders() {
       return [...this.headers]
@@ -351,8 +366,10 @@ export default {
     console.log(this.tempSettings);
 
     // Колонки, которые мы можем добавить в список (исключим те, что уже добавлены)
+    this.totalColumnOptions = JSON.parse(this.companyFields); 
+
     let headerTitles = this.headers.map((header) => header.value);
-    this.columnOptions = JSON.parse(this.companyFields).filter(
+    this.columnOptions = this.totalColumnOptions.filter(
       (option) => !headerTitles.includes(option.title)
     );
 
@@ -435,7 +452,7 @@ export default {
       console.log(this.tempSettings);
 
       this.headers.forEach((header) => {
-        console.log(header.value)
+        console.log(header.value);
         header.displayed = this.tempSettings.includes(header.value);
 
         if (!header.displayed) {
@@ -472,13 +489,19 @@ export default {
       this.tempSettings = [...this.filteredHeaders.map((header) => header.value)];
     },
     addColumn(local) {
+
       let optionIndex = this.columnOptions.findIndex(
         (option) => option.title == this.selectedHeader
       );
+
+      if (optionIndex == -1) {
+        return;
+      }
+
       let newHeader = this.columnOptions[optionIndex];
 
       this.$http
-        .post(`headers`, {
+        .post(`add_header`, {
           header: newHeader,
           domain_id: local ? this.domainInfo.id : null,
           user_id: this.currentUser,
@@ -493,7 +516,32 @@ export default {
           this.headers.push(header);
 
           this.optionInput = null;
-          this.columnOptions.splice(optionIndex, 1);
+  
+          // TODO: вынести в updateColumnOptions
+          let headerTitles = this.headers.map((header) => header.value);
+          this.columnOptions = this.totalColumnOptions.filter(
+            (option) => !headerTitles.includes(option.title)
+          );
+        });
+    },
+    removeColumn(header) {
+      this.$http
+        .post(`remove_header`, {
+          header_id: header.id,
+        })
+        .then((response) => {
+          this.headers = this.headers.filter(
+            (item) => item.id != header.id
+          );
+
+          // TODO: вынести в updateColumnOptions
+          let headerTitles = this.headers.map((header) => header.value);
+          this.columnOptions = this.totalColumnOptions.filter(
+            (option) => !headerTitles.includes(option.title)
+          );
+
+          // TODO: вынести в updateTempSettings
+          this.tempSettings = [...this.filteredHeaders.map((header) => header.value)];
         });
     },
     onGroupBy(arg) {
@@ -506,10 +554,12 @@ export default {
 
       if (this.oldGroupBy) {
         // TODO: remove redundant code
-        let headerIndex = this.headers.findIndex((header) => header.value == this.oldGroupBy);
+        let headerIndex = this.headers.findIndex(
+          (header) => header.value == this.oldGroupBy
+        );
         let header = this.headers[headerIndex];
-        
-        this.$delete(this.headers[headerIndex], 'filter');
+
+        this.$delete(this.headers[headerIndex], "filter");
       }
 
       this.oldGroupBy = arg;
@@ -518,7 +568,7 @@ export default {
         let headerIndex = this.headers.findIndex((header) => header.value == arg);
         let header = this.headers[headerIndex];
 
-        this.$set(this.headers[headerIndex], 'filter', value => {
+        this.$set(this.headers[headerIndex], "filter", (value) => {
           if (!this.displayed_items[value] || this.displayed_items[value] == 0) {
             this.displayed_items[value] = 1;
             return true;
@@ -527,7 +577,7 @@ export default {
           if (!this.groupedItems) return true;
 
           return !this.groupedItems.includes(value);
-        }); 
+        });
 
         this.headers[headerIndex] = header;
 
@@ -544,16 +594,14 @@ export default {
       if (isOpen) {
         this.groupedItems.push(group);
       } else {
-        this.groupedItems = this.groupedItems.filter(item => item != group);
+        this.groupedItems = this.groupedItems.filter((item) => item != group);
       }
     },
     filterAndRefresh(value, search, item) {
       this.displayed_items = {};
 
-      return value != null &&
-        search != null &&
-        value.toString().indexOf(search) !== -1
-    }
+      return value != null && search != null && value.toString().indexOf(search) !== -1;
+    },
   },
   props: [
     "users",
@@ -583,10 +631,18 @@ export default {
 .v-data-table /deep/ .v-data-table__wrapper {
   overflow: unset;
 }
+
+.v-input /deep/ label {
+  margin-bottom: 0;
+}
 </style>
 
 <style>
 tbody tr:nth-of-type(odd) {
   background-color: rgba(0, 0, 0, 0.05);
+}
+
+.inline-items {
+  display: flex;
 }
 </style>

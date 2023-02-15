@@ -27,7 +27,8 @@ Route::middleware(['connect'])->group(function () {
 
     Route::post('/settings', [BitrixController::class, 'updateHeaderSettings']);    
     
-    Route::post('/headers', [BitrixController::class, 'addHeader']);
+    Route::post('/add_header', [BitrixController::class, 'addHeader']);
+    Route::post('/remove_header', [BitrixController::class, 'removeHeader']);
 });
 
 Route::get('/test', function () {

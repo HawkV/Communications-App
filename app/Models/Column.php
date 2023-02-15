@@ -14,6 +14,14 @@ class Column extends BaseModel
         return $this->belongsTo(Domain::class);
     }
 
+    public static function boot() {
+        parent::boot();
+
+        static::deleting(function($user) {
+            $user->settings()->delete();
+        });
+    }
+
     protected $attributes = [
         'groupable' => true,
         'sortable' => true,

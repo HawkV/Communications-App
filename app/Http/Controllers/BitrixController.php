@@ -182,10 +182,22 @@ class BitrixController extends Controller
             [
                 'user_id' => $user_id,
                 'column_id'=> $column->id,
-                'displayed' => true
+                'displayed' => false
             ]
         );
 
         return $this->settingData($setting);
+    }
+
+    /**
+     * Удаляем столбец из таблицы с результатами запросов
+     */
+    function removeHeader(Request $request) {
+        $header_id = $request->get('header_id');
+
+        $column = Column::find($header_id);
+        $column->delete();
+
+        return true;
     }
 }
