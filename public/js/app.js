@@ -1908,6 +1908,8 @@ module.exports = {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+
 function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest(); }
 
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
@@ -2169,73 +2171,6 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
 //
 //
 //
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
 /* harmony default export */ __webpack_exports__["default"] = ({
   data: function data(vm) {
     return {
@@ -2243,9 +2178,12 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
       companies: [],
       headers: [],
       loading: false,
-      selectedColor: 'blue',
+      groupedItems: [],
+      selectedColor: "blue",
       dialog: false,
       groupBy: null,
+      oldGroupBy: null,
+      displayed_items: {},
       userOptions: [],
       columnOptions: [],
       optionInput: null,
@@ -2255,11 +2193,11 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
       tempSettings: [],
       menu: false,
       classNames: {
-        '127': 'A-класс',
-        '126': 'B-класс',
-        '125': 'C-класс',
-        '124': 'D-класс',
-        "null": 'Не классифицированы'
+        127: "A-класс",
+        126: "B-класс",
+        125: "C-класс",
+        124: "D-класс",
+        "null": "Не классифицированы"
       },
       userMap: {},
       rowDialog: false
@@ -2267,8 +2205,27 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
   },
   computed: {
     filteredHeaders: function filteredHeaders() {
+      console.log(this.headers);
       return this.headers.filter(function (header) {
         return header.displayed;
+      }).map(function (header) {
+        var newHeader = {
+          text: header.text,
+          value: header.value,
+          "class": header["class"],
+          sortable: header.sortable,
+          groupable: header.groupable,
+          sort_order: header.sort_order,
+          options: {
+            user_id: header.user_id
+          }
+        };
+
+        if (header.filter) {
+          newHeader.filter = header.filter;
+        }
+
+        return newHeader;
       });
     },
     sortedHeaders: function sortedHeaders() {
@@ -2309,8 +2266,8 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
     this.headers = JSON.parse(this.columnSettings); // Параметры, общие для всех колонок
 
     this.headers.forEach(function (header) {
-      header["class"] = 'sticky-header title lighten-3 white';
-      header.align = 'left';
+      header["class"] = "sticky-header title lighten-3 white";
+      header.align = "left";
     });
     var groupHeader = this.headers.find(function (header) {
       return header.grouped;
@@ -2330,7 +2287,7 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
     this.tempSettings = _toConsumableArray(this.filteredHeaders.map(function (header) {
       return header.value;
     }));
-    console.log(this.tempSettings); // Колонки, которые мы можем добавить в список (исключим те, что уже добавлены) 
+    console.log(this.tempSettings); // Колонки, которые мы можем добавить в список (исключим те, что уже добавлены)
 
     var headerTitles = this.headers.map(function (header) {
       return header.value;
@@ -2397,13 +2354,13 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
       });
     },
     getColor: function getColor(header) {
-      if (header.sort_order > -1) return 'blue';
-      return 'gray';
+      if (header.sort_order > -1) return "blue";
+      return "gray";
     },
     formatDate: function formatDate(date) {
       if (!date) return null;
 
-      var _date$split = date.split('-'),
+      var _date$split = date.split("-"),
           _date$split2 = _slicedToArray(_date$split, 3),
           year = _date$split2[0],
           month = _date$split2[1],
@@ -2414,9 +2371,9 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
     acceptSettings: function acceptSettings() {
       var _this4 = this;
 
-      console.log("lmao");
       console.log(this.tempSettings);
       this.headers.forEach(function (header) {
+        console.log(header.value);
         header.displayed = _this4.tempSettings.includes(header.value);
 
         if (!header.displayed) {
@@ -2424,7 +2381,7 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
             _this4.removeFromSort(header);
           }
 
-          if (header.value == _this4.groupBy[0]) {
+          if (_this4.groupBy && header.value == _this4.groupBy[0]) {
             _this4.groupBy = null;
           }
         }
@@ -2437,7 +2394,7 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
 
       var tempHeaders = _toConsumableArray(this.headers);
 
-      if (this.groupBy[0]) {
+      if (this.groupBy && this.groupBy[0]) {
         tempHeaders.find(function (header) {
           return header.value == _this5.groupBy[0];
         }).grouped = true;
@@ -2473,8 +2430,8 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
       }).then(function (response) {
         var header = response.data; // repeating code
 
-        header["class"] = 'sticky-header title lighten-3 white';
-        header.align = 'left';
+        header["class"] = "sticky-header title lighten-3 white";
+        header.align = "left";
 
         _this6.headers.push(header);
 
@@ -2484,25 +2441,72 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
       });
     },
     onGroupBy: function onGroupBy(arg) {
-      if (arg && arg.length > 0) {
-        var header = this.headers.find(function (header) {
-          return header.value == arg[0];
+      var _this7 = this;
+
+      this.displayed_items = {};
+      this.groupedItems = [];
+
+      if (arg && _typeof(arg) == "object") {
+        arg = arg[0];
+      }
+
+      if (this.oldGroupBy) {
+        // TODO: remove redundant code
+        var headerIndex = this.headers.findIndex(function (header) {
+          return header.value == _this7.oldGroupBy;
+        });
+        var header = this.headers[headerIndex];
+        this.$delete(this.headers[headerIndex], 'filter');
+      }
+
+      this.oldGroupBy = arg;
+
+      if (arg) {
+        var _headerIndex = this.headers.findIndex(function (header) {
+          return header.value == arg;
         });
 
-        if (header.sort_order != -1) {
-          this.removeFromSort(header);
+        var _header = this.headers[_headerIndex];
+        this.$set(this.headers[_headerIndex], 'filter', function (value) {
+          if (!_this7.displayed_items[value] || _this7.displayed_items[value] == 0) {
+            _this7.displayed_items[value] = 1;
+            return true;
+          }
+
+          if (!_this7.groupedItems) return true;
+          return !_this7.groupedItems.includes(value);
+        });
+        this.headers[_headerIndex] = _header;
+
+        if (_header.sort_order != -1) {
+          this.removeFromSort(_header);
         }
       }
 
       return arg;
+    },
+    toggleItems: function toggleItems(isOpen, group) {
+      this.displayed_items = {};
+
+      if (isOpen) {
+        this.groupedItems.push(group);
+      } else {
+        this.groupedItems = this.groupedItems.filter(function (item) {
+          return item != group;
+        });
+      }
+    },
+    filterAndRefresh: function filterAndRefresh(value, search, item) {
+      this.displayed_items = {};
+      return value != null && search != null && value.toString().indexOf(search) !== -1;
     }
   },
-  props: ['users', 'companyFields', 'columnSettings', 'currentUser', 'domain', 'appFolder']
+  props: ["users", "companyFields", "columnSettings", "currentUser", "domain", "appFolder"]
 });
 
 /***/ }),
 
-/***/ "./node_modules/css-loader/index.js?!./node_modules/postcss-loader/src/index.js?!./node_modules/vuetify/dist/vuetify.min.css?bdb9":
+/***/ "./node_modules/css-loader/index.js?!./node_modules/postcss-loader/src/index.js?!./node_modules/vuetify/dist/vuetify.min.css":
 /*!***********************************************************************************************************************************!*\
   !*** ./node_modules/css-loader??ref--6-1!./node_modules/postcss-loader/src??ref--6-2!./node_modules/vuetify/dist/vuetify.min.css ***!
   \***********************************************************************************************************************************/
@@ -2533,7 +2537,7 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, "\n.sticky-header[data-v-5bd01d73] {\r\n    position: -webkit-sticky;\r\n    position: sticky;\r\n    z-index: 2;\r\n    top: 0;\n}\n.sticky-group-header[data-v-5bd01d73] {\r\n    position: -webkit-sticky;\r\n    position: sticky;\r\n    z-index: 1;\r\n    top: 3rem;\r\n    background-color: #c7c7c7;\n}\n.v-data-table[data-v-5bd01d73] .v-data-table__wrapper {\r\n    overflow: unset;\n}\r\n", ""]);
+exports.push([module.i, "\n.sticky-header[data-v-5bd01d73] {\r\n  position: -webkit-sticky;\r\n  position: sticky;\r\n  z-index: 2;\r\n  top: 0;\n}\n.sticky-group-header[data-v-5bd01d73] {\r\n  position: -webkit-sticky;\r\n  position: sticky;\r\n  z-index: 1;\r\n  top: 3rem;\r\n  background-color: #c7c7c7;\n}\n.v-data-table[data-v-5bd01d73] .v-data-table__wrapper {\r\n  overflow: unset;\n}\r\n", ""]);
 
 // exports
 
@@ -2552,7 +2556,7 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, "\ntbody tr:nth-of-type(odd) {\r\n    background-color: rgba(0, 0, 0, .05);\n}\r\n", ""]);
+exports.push([module.i, "\ntbody tr:nth-of-type(odd) {\r\n  background-color: rgba(0, 0, 0, 0.05);\n}\r\n", ""]);
 
 // exports
 
@@ -4394,28 +4398,26 @@ var render = function() {
                           ? _c("span", { staticClass: "black--text" }, [
                               index > 0 ? _c("span", [_vm._v(", ")]) : _vm._e(),
                               _vm._v(
-                                "\n                        " +
+                                "\n            " +
                                   _vm._s(item.name) +
-                                  "\n                    "
+                                  "\n          "
                               )
                             ])
                           : _vm._e(),
                         _vm._v(" "),
                         index === _vm.shownEmployees
                           ? [
-                              _vm._v(
-                                "\n                         \n                        "
-                              ),
+                              _vm._v("\n             \n            "),
                               _c(
                                 "span",
                                 { staticClass: "grey--text caption" },
                                 [
                                   _vm._v(
-                                    "\n                            (+" +
+                                    "\n              (+" +
                                       _vm._s(
                                         _vm.userList.length - _vm.shownEmployees
                                       ) +
-                                      " сотрудников)\n                        "
+                                      " сотрудников)\n            "
                                   )
                                 ]
                               )
@@ -4538,11 +4540,7 @@ var render = function() {
                             }
                           }
                         },
-                        [
-                          _vm._v(
-                            "\n                        Отменить\n                    "
-                          )
-                        ]
+                        [_vm._v(" Отменить ")]
                       ),
                       _vm._v(" "),
                       _c(
@@ -4555,11 +4553,7 @@ var render = function() {
                             }
                           }
                         },
-                        [
-                          _vm._v(
-                            "\n                        OK\n                    "
-                          )
-                        ]
+                        [_vm._v(" OK ")]
                       )
                     ],
                     1
@@ -4581,7 +4575,7 @@ var render = function() {
                   attrs: { block: "", color: "primary" },
                   on: { click: _vm.checkCompanies }
                 },
-                [_vm._v("\n                Поиск\n            ")]
+                [_vm._v(" Поиск ")]
               )
             ],
             1
@@ -4619,13 +4613,7 @@ var render = function() {
                               ),
                               on
                             ),
-                            [
-                              _c("v-icon", [
-                                _vm._v(
-                                  "\n                            mdi-cog\n                        "
-                                )
-                              ])
-                            ],
+                            [_c("v-icon", [_vm._v(" mdi-cog ")])],
                             1
                           )
                         ]
@@ -4647,9 +4635,7 @@ var render = function() {
                     { staticClass: "mx-auto" },
                     [
                       _c("v-card-title", { staticClass: "headline" }, [
-                        _vm._v(
-                          "\n                        Настройки\n                    "
-                        )
+                        _vm._v(" Настройки ")
                       ]),
                       _vm._v(" "),
                       _c(
@@ -4746,7 +4732,7 @@ var render = function() {
                                         },
                                         [
                                           _vm._v(
-                                            "\n                                    >\n                                    "
+                                            "\n                    >\n                  "
                                           )
                                         ]
                                       )
@@ -4774,11 +4760,7 @@ var render = function() {
                                             }
                                           }
                                         },
-                                        [
-                                          _vm._v(
-                                            "\n                                        Добавить\n                                    "
-                                          )
-                                        ]
+                                        [_vm._v(" Добавить ")]
                                       )
                                     ],
                                     1
@@ -4803,11 +4785,7 @@ var render = function() {
                               _c(
                                 "v-btn",
                                 { attrs: { color: "blue darken-1", text: "" } },
-                                [
-                                  _vm._v(
-                                    "\n                                Скачать данные\n                            "
-                                  )
-                                ]
+                                [_vm._v(" Скачать данные ")]
                               )
                             ],
                             1
@@ -4821,11 +4799,7 @@ var render = function() {
                               attrs: { color: "red darken-1", text: "" },
                               on: { click: _vm.cancelSettings }
                             },
-                            [
-                              _vm._v(
-                                "\n                        Отменить\n                        "
-                              )
-                            ]
+                            [_vm._v(" Отменить ")]
                           ),
                           _vm._v(" "),
                           _c(
@@ -4834,11 +4808,7 @@ var render = function() {
                               attrs: { color: "green darken-1", text: "" },
                               on: { click: _vm.acceptSettings }
                             },
-                            [
-                              _vm._v(
-                                "\n                        Применить\n                        "
-                              )
-                            ]
+                            [_vm._v("\n              Применить\n            ")]
                           )
                         ],
                         1
@@ -4849,7 +4819,7 @@ var render = function() {
                 ],
                 1
               ),
-              _vm._v("\n            Компании\n            "),
+              _vm._v("\n      Компании\n      "),
               _c("v-spacer"),
               _vm._v(" "),
               _c("v-text-field", {
@@ -4877,9 +4847,10 @@ var render = function() {
               headers: _vm.filteredHeaders,
               items: _vm.companies,
               "item-key": "ID",
+              search: _vm.search,
+              "custom-filter": _vm.filterAndRefresh,
               "show-group-by": "",
               "group-by": _vm.groupBy,
-              search: _vm.search,
               loading: _vm.loading,
               "sort-by": _vm.sortBy,
               "sort-desc": _vm.sortDesc,
@@ -5087,9 +5058,9 @@ var render = function() {
                                   header.sortable && header.sort_order > -1
                                     ? _c("v-chip", [
                                         _vm._v(
-                                          "\n                                    " +
+                                          "\n                  " +
                                             _vm._s(header.sort_order + 1) +
-                                            "\n                                "
+                                            "\n                "
                                         )
                                       ])
                                     : _vm._e()
@@ -5121,24 +5092,33 @@ var render = function() {
                         attrs: { colspan: "100%" }
                       },
                       [
-                        _c("v-icon", { on: { click: toggle } }, [
-                          _vm._v(
-                            "\n                        " +
-                              _vm._s(isOpen ? "mdi-minus" : "mdi-plus") +
-                              "\n                    "
-                          )
-                        ]),
+                        _c(
+                          "v-icon",
+                          {
+                            on: {
+                              click: function($event) {
+                                toggle()
+                                _vm.toggleItems(isOpen, group)
+                              }
+                            }
+                          },
+                          [
+                            _vm._v(
+                              "\n            " +
+                                _vm._s(isOpen ? "mdi-minus" : "mdi-plus") +
+                                "\n          "
+                            )
+                          ]
+                        ),
                         _vm._v(
-                          "\n                    " +
+                          "\n          " +
                             _vm._s(group) +
                             ": " +
                             _vm._s(_vm.groupCount[group]) +
-                            "\n                    "
+                            "\n          "
                         ),
                         _c("v-icon", { on: { click: remove } }, [
-                          _vm._v(
-                            "\n                        mdi-close\n                    "
-                          )
+                          _vm._v(" mdi-close ")
                         ])
                       ],
                       1
@@ -61991,7 +61971,7 @@ module.exports = __WEBPACK_EXTERNAL_MODULE_vue__;
 /***/ (function(module, exports, __webpack_require__) {
 
 
-var content = __webpack_require__(/*! !../../css-loader??ref--6-1!../../postcss-loader/src??ref--6-2!./vuetify.min.css */ "./node_modules/css-loader/index.js?!./node_modules/postcss-loader/src/index.js?!./node_modules/vuetify/dist/vuetify.min.css?bdb9");
+var content = __webpack_require__(/*! !../../css-loader??ref--6-1!../../postcss-loader/src??ref--6-2!./vuetify.min.css */ "./node_modules/css-loader/index.js?!./node_modules/postcss-loader/src/index.js?!./node_modules/vuetify/dist/vuetify.min.css");
 
 if(typeof content === 'string') content = [[module.i, content, '']];
 

@@ -17,6 +17,6 @@ class Column extends BaseModel
     protected $attributes = [
         'groupable' => true,
         'sortable' => true,
-        'filterable' => false,
+        'filterable' => true,
     ];
 }

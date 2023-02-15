@@ -181,7 +181,8 @@ class BitrixController extends Controller
         $setting = ColumnSetting::updateOrCreate(
             [
                 'user_id' => $user_id,
-                'column_id'=> $column->id
+                'column_id'=> $column->id,
+                'displayed' => true
             ]
         );
 
