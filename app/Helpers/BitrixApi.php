@@ -171,7 +171,7 @@ class BitrixApi {
         $contactActivities = $this->callBatch('crm.activity.list', $select, $filter);
 
         // Отбрасываем компании, у контактов которых есть такие дела
-        $contactActivityCompanies = $contactActivities->map(fn($activity) => $contactCompanies[$activity['OWNER_ID']]);
+        $contactActivityCompanies = $contactActivities->map(fn($activity) => $contactCompanies[$activity['OWNER_ID']] ?? []);
         $companyIDList = $companyIDList->reject(fn($id) => $contactActivityCompanies->contains($id));
 
         if ($companyIDList->count() == 0) {
