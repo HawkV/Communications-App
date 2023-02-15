@@ -99,7 +99,12 @@ class BitrixController extends Controller
         $companyFields = $companyFields->map(function($item, $key) {
             return [
                 'title' => $key,
-                'label' => $item->listLabel?? $item->title
+                'label' => $this->valueOrDefault( // TODO: не очень хороший способ гарантировать, что все поля существуют
+                    $item->listLabel ?? "", 
+                    $item->formLabel ?? "", 
+                    $item->filterLabel ?? "",
+                    $item->title
+                ),
             ];
         })->values();
 
@@ -115,6 +120,15 @@ class BitrixController extends Controller
             'domain' => $domain,
             'appFolder' => $appFolder
         ]);
+    }
+
+    function valueOrDefault(String ...$values) {
+        foreach ($values as $value) {
+            if ($value != "") 
+                return $value;
+        }
+
+        return "";
     }
 
     /**

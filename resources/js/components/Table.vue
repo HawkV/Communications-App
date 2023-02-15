@@ -367,6 +367,8 @@ export default {
 
     // Колонки, которые мы можем добавить в список (исключим те, что уже добавлены)
     this.totalColumnOptions = JSON.parse(this.companyFields); 
+    console.log("this.companyFields");
+    console.log(this.companyFields);
 
     let headerTitles = this.headers.map((header) => header.value);
     this.columnOptions = this.totalColumnOptions.filter(
