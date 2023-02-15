@@ -128,7 +128,7 @@
               </v-container>
             </v-card-text>
             <v-card-actions>
-              <download-excel :data="companies">
+              <download-excel :data="excelCompanies">
                 <v-btn color="blue darken-1" text> Скачать данные </v-btn>
               </download-excel>
               <v-spacer></v-spacer>
@@ -237,7 +237,7 @@
 
         <!-- Ссылка в ячейке -->
         <template v-slot:item.TITLE="{ item }">
-          <v-input hide-details="auto" :messages="['Пример дополнительной информации']">
+          <v-input hide-details="auto"> <!-- :messages="['Пример дополнительной информации']"> -->
             <a
               :href="`https://${domainInfo.domain}/crm/company/details/${item.ID}/`"
               target="_blank"
@@ -290,8 +290,6 @@ export default {
   }),
   computed: {
     filteredHeaders() {
-      console.log("this.headers");
-      console.log(this.headers);
       return this.headers
         .filter((header) => header.displayed)
         .map((header) => {
@@ -313,6 +311,23 @@ export default {
 
           return newHeader;
         });
+    },
+    excelCompanies() {
+      let data = this.companies.map((company) => {
+        let item = {};
+
+        this.filteredHeaders.map((header) => {
+          item[header.text] = company[header.value];
+        });
+
+        return item;
+      });
+
+
+      console.log();
+      console.log(data);
+
+      return data;
     },
     sortedHeaders() {
       return [...this.headers]
@@ -367,8 +382,6 @@ export default {
 
     // Колонки, которые мы можем добавить в список (исключим те, что уже добавлены)
     this.totalColumnOptions = JSON.parse(this.companyFields); 
-    console.log("this.companyFields");
-    console.log(this.companyFields);
 
     let headerTitles = this.headers.map((header) => header.value);
     this.columnOptions = this.totalColumnOptions.filter(
@@ -427,12 +440,21 @@ export default {
           console.log(response);
 
           this.companies = Object.values(response.data);
+          console.log("read data");
+          console.log(this.companies);
+          
           this.companies.forEach((company) => {
-            company.UF_CRM_FIELD_ABC = this.classNames[company.UF_CRM_FIELD_ABC];
+            if (company.UF_CRM_FIELD_ABC) {
+              company.UF_CRM_FIELD_ABC = this.classNames[company.UF_CRM_FIELD_ABC];
+            }
+            
             company.ASSIGNED_BY_ID = this.userMap[company.ASSIGNED_BY_ID];
           });
 
           this.loading = false;
+
+          console.log("processed data");
+          console.log(this.companies);
 
           this.$nextTick(function () {
             BX24.fitWindow();

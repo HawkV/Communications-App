@@ -2217,8 +2217,6 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
   },
   computed: {
     filteredHeaders: function filteredHeaders() {
-      console.log("this.headers");
-      console.log(this.headers);
       return this.headers.filter(function (header) {
         return header.displayed;
       }).map(function (header) {
@@ -2241,6 +2239,22 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
         return newHeader;
       });
     },
+    excelCompanies: function excelCompanies() {
+      var _this = this;
+
+      var data = this.companies.map(function (company) {
+        var item = {};
+
+        _this.filteredHeaders.map(function (header) {
+          item[header.text] = company[header.value];
+        });
+
+        return item;
+      });
+      console.log();
+      console.log(data);
+      return data;
+    },
     sortedHeaders: function sortedHeaders() {
       return _toConsumableArray(this.headers).filter(function (header) {
         return header.sort_order > -1;
@@ -2249,10 +2263,10 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
       });
     },
     groupCount: function groupCount() {
-      var _this = this;
+      var _this2 = this;
 
       var groupValues = this.companies.map(function (company) {
-        return company[_this.groupBy[0]];
+        return company[_this2.groupBy[0]];
       });
       var groupCount = groupValues.reduce(function (counts, item) {
         counts[item] = (counts[item] || 0) + 1;
@@ -2270,11 +2284,11 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
     }
   },
   created: function created() {
-    var _this2 = this;
+    var _this3 = this;
 
     this.userOptions = JSON.parse(this.users);
     this.userOptions.forEach(function (user) {
-      return _this2.userMap[user.id] = user.name;
+      return _this3.userMap[user.id] = user.name;
     });
     this.headers = JSON.parse(this.columnSettings); // Параметры, общие для всех колонок
 
@@ -2303,8 +2317,6 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
     console.log(this.tempSettings); // Колонки, которые мы можем добавить в список (исключим те, что уже добавлены)
 
     this.totalColumnOptions = JSON.parse(this.companyFields);
-    console.log("this.companyFields");
-    console.log(this.companyFields);
     var headerTitles = this.headers.map(function (header) {
       return header.value;
     });
@@ -2343,7 +2355,7 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
       header.sort_order = -1;
     },
     checkCompanies: function checkCompanies() {
-      var _this3 = this;
+      var _this4 = this;
 
       this.loading = true;
       this.companies = [];
@@ -2355,16 +2367,23 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
         })
       }).then(function (response) {
         console.log(response);
-        _this3.companies = Object.values(response.data);
+        _this4.companies = Object.values(response.data);
+        console.log("read data");
+        console.log(_this4.companies);
 
-        _this3.companies.forEach(function (company) {
-          company.UF_CRM_FIELD_ABC = _this3.classNames[company.UF_CRM_FIELD_ABC];
-          company.ASSIGNED_BY_ID = _this3.userMap[company.ASSIGNED_BY_ID];
+        _this4.companies.forEach(function (company) {
+          if (company.UF_CRM_FIELD_ABC) {
+            company.UF_CRM_FIELD_ABC = _this4.classNames[company.UF_CRM_FIELD_ABC];
+          }
+
+          company.ASSIGNED_BY_ID = _this4.userMap[company.ASSIGNED_BY_ID];
         });
 
-        _this3.loading = false;
+        _this4.loading = false;
+        console.log("processed data");
+        console.log(_this4.companies);
 
-        _this3.$nextTick(function () {
+        _this4.$nextTick(function () {
           BX24.fitWindow();
         });
       });
@@ -2385,20 +2404,20 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
       return "".concat(day, "/").concat(month, "/").concat(year);
     },
     acceptSettings: function acceptSettings() {
-      var _this4 = this;
+      var _this5 = this;
 
       console.log(this.tempSettings);
       this.headers.forEach(function (header) {
         console.log(header.value);
-        header.displayed = _this4.tempSettings.includes(header.value);
+        header.displayed = _this5.tempSettings.includes(header.value);
 
         if (!header.displayed) {
           if (header.sort_order != -1) {
-            _this4.removeFromSort(header);
+            _this5.removeFromSort(header);
           }
 
-          if (_this4.groupBy && header.value == _this4.groupBy[0]) {
-            _this4.groupBy = null;
+          if (_this5.groupBy && header.value == _this5.groupBy[0]) {
+            _this5.groupBy = null;
           }
         }
       });
@@ -2406,13 +2425,13 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
       this.saveSettings();
     },
     saveSettings: function saveSettings() {
-      var _this5 = this;
+      var _this6 = this;
 
       var tempHeaders = _toConsumableArray(this.headers);
 
       if (this.groupBy && this.groupBy[0]) {
         tempHeaders.find(function (header) {
-          return header.value == _this5.groupBy[0];
+          return header.value == _this6.groupBy[0];
         }).grouped = true;
       }
 
@@ -2433,10 +2452,10 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
       }));
     },
     addColumn: function addColumn(local) {
-      var _this6 = this;
+      var _this7 = this;
 
       var optionIndex = this.columnOptions.findIndex(function (option) {
-        return option.title == _this6.selectedHeader;
+        return option.title == _this7.selectedHeader;
       });
 
       if (optionIndex == -1) {
@@ -2454,28 +2473,9 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
         header["class"] = "sticky-header title lighten-3 white";
         header.align = "left";
 
-        _this6.headers.push(header);
+        _this7.headers.push(header);
 
-        _this6.optionInput = null; // TODO: вынести в updateColumnOptions
-
-        var headerTitles = _this6.headers.map(function (header) {
-          return header.value;
-        });
-
-        _this6.columnOptions = _this6.totalColumnOptions.filter(function (option) {
-          return !headerTitles.includes(option.title);
-        });
-      });
-    },
-    removeColumn: function removeColumn(header) {
-      var _this7 = this;
-
-      this.$http.post("remove_header", {
-        header_id: header.id
-      }).then(function (response) {
-        _this7.headers = _this7.headers.filter(function (item) {
-          return item.id != header.id;
-        }); // TODO: вынести в updateColumnOptions
+        _this7.optionInput = null; // TODO: вынести в updateColumnOptions
 
         var headerTitles = _this7.headers.map(function (header) {
           return header.value;
@@ -2483,15 +2483,34 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
 
         _this7.columnOptions = _this7.totalColumnOptions.filter(function (option) {
           return !headerTitles.includes(option.title);
+        });
+      });
+    },
+    removeColumn: function removeColumn(header) {
+      var _this8 = this;
+
+      this.$http.post("remove_header", {
+        header_id: header.id
+      }).then(function (response) {
+        _this8.headers = _this8.headers.filter(function (item) {
+          return item.id != header.id;
+        }); // TODO: вынести в updateColumnOptions
+
+        var headerTitles = _this8.headers.map(function (header) {
+          return header.value;
+        });
+
+        _this8.columnOptions = _this8.totalColumnOptions.filter(function (option) {
+          return !headerTitles.includes(option.title);
         }); // TODO: вынести в updateTempSettings
 
-        _this7.tempSettings = _toConsumableArray(_this7.filteredHeaders.map(function (header) {
+        _this8.tempSettings = _toConsumableArray(_this8.filteredHeaders.map(function (header) {
           return header.value;
         }));
       });
     },
     onGroupBy: function onGroupBy(arg) {
-      var _this8 = this;
+      var _this9 = this;
 
       this.displayed_items = {};
       this.groupedItems = [];
@@ -2503,7 +2522,7 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
       if (this.oldGroupBy) {
         // TODO: remove redundant code
         var headerIndex = this.headers.findIndex(function (header) {
-          return header.value == _this8.oldGroupBy;
+          return header.value == _this9.oldGroupBy;
         });
         var header = this.headers[headerIndex];
         this.$delete(this.headers[headerIndex], "filter");
@@ -2518,13 +2537,13 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
 
         var _header = this.headers[_headerIndex];
         this.$set(this.headers[_headerIndex], "filter", function (value) {
-          if (!_this8.displayed_items[value] || _this8.displayed_items[value] == 0) {
-            _this8.displayed_items[value] = 1;
+          if (!_this9.displayed_items[value] || _this9.displayed_items[value] == 0) {
+            _this9.displayed_items[value] = 1;
             return true;
           }
 
-          if (!_this8.groupedItems) return true;
-          return !_this8.groupedItems.includes(value);
+          if (!_this9.groupedItems) return true;
+          return !_this9.groupedItems.includes(value);
         });
         this.headers[_headerIndex] = _header;
 
@@ -2556,7 +2575,7 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
 
 /***/ }),
 
-/***/ "./node_modules/css-loader/index.js?!./node_modules/postcss-loader/src/index.js?!./node_modules/vuetify/dist/vuetify.min.css?bdb9":
+/***/ "./node_modules/css-loader/index.js?!./node_modules/postcss-loader/src/index.js?!./node_modules/vuetify/dist/vuetify.min.css":
 /*!***********************************************************************************************************************************!*\
   !*** ./node_modules/css-loader??ref--6-1!./node_modules/postcss-loader/src??ref--6-2!./node_modules/vuetify/dist/vuetify.min.css ***!
   \***********************************************************************************************************************************/
@@ -4860,7 +4879,7 @@ var render = function() {
                         [
                           _c(
                             "download-excel",
-                            { attrs: { data: _vm.companies } },
+                            { attrs: { data: _vm.excelCompanies } },
                             [
                               _c(
                                 "v-btn",
@@ -5211,32 +5230,23 @@ var render = function() {
                 fn: function(ref) {
                   var item = ref.item
                   return [
-                    _c(
-                      "v-input",
-                      {
-                        attrs: {
-                          "hide-details": "auto",
-                          messages: ["Пример дополнительной информации"]
-                        }
-                      },
-                      [
-                        _c(
-                          "a",
-                          {
-                            attrs: {
-                              href:
-                                "https://" +
-                                _vm.domainInfo.domain +
-                                "/crm/company/details/" +
-                                item.ID +
-                                "/",
-                              target: "_blank"
-                            }
-                          },
-                          [_vm._v(_vm._s(item.TITLE))]
-                        )
-                      ]
-                    )
+                    _c("v-input", { attrs: { "hide-details": "auto" } }, [
+                      _c(
+                        "a",
+                        {
+                          attrs: {
+                            href:
+                              "https://" +
+                              _vm.domainInfo.domain +
+                              "/crm/company/details/" +
+                              item.ID +
+                              "/",
+                            target: "_blank"
+                          }
+                        },
+                        [_vm._v(_vm._s(item.TITLE))]
+                      )
+                    ])
                   ]
                 }
               }
@@ -62051,7 +62061,7 @@ module.exports = __WEBPACK_EXTERNAL_MODULE_vue__;
 /***/ (function(module, exports, __webpack_require__) {
 
 
-var content = __webpack_require__(/*! !../../css-loader??ref--6-1!../../postcss-loader/src??ref--6-2!./vuetify.min.css */ "./node_modules/css-loader/index.js?!./node_modules/postcss-loader/src/index.js?!./node_modules/vuetify/dist/vuetify.min.css?bdb9");
+var content = __webpack_require__(/*! !../../css-loader??ref--6-1!../../postcss-loader/src??ref--6-2!./vuetify.min.css */ "./node_modules/css-loader/index.js?!./node_modules/postcss-loader/src/index.js?!./node_modules/vuetify/dist/vuetify.min.css");
 
 if(typeof content === 'string') content = [[module.i, content, '']];
 

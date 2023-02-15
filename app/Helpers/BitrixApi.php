@@ -68,9 +68,10 @@ class BitrixApi {
 
     public function getUsers() {
         $select = ['ID', 'NAME', 'LAST_NAME', 'SECOND_NAME'];
-        
+        $secondName = $user['SECOND_NAME'] ?? '';
+
         $users = $this->callBatch('user.get', $select)->map(fn($user) => [
-            'name' => "{$user['LAST_NAME']} {$user['NAME']} {$user['SECOND_NAME']}",
+            'name' => "{$user['LAST_NAME']} {$user['NAME']} {$secondName}",
             'id' => $user['ID']
         ])->sortBy('name')->values()->all();
 
