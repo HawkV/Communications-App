@@ -105,6 +105,7 @@ class BitrixController extends Controller
                     $item->filterLabel ?? "",
                     $item->title
                 ),
+                'type' => $item->type,
             ];
         })->values();
 
@@ -142,6 +143,18 @@ class BitrixController extends Controller
             $request->get('userList'), 
             $request->get('minCommDate'),
             $request->get('fields')
+        );
+    }
+
+    /**
+     * Возвращаем значения справочника
+     */
+    public function getStatusValues(Request $request) {
+        // TODO: вынести в middleware?
+        $api = new BitrixApi($request->get('params'));
+        
+        return $api->getStatusValues(
+            $request->get('entityID'), 
         );
     }
 

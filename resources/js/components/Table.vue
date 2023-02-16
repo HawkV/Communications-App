@@ -302,6 +302,7 @@ export default {
             sort_order: header.sort_order,
             options: {
               user_id: header.user_id,
+              type: this.totalColumnOptions.find(item => item.title == header.value)?.type,
             },
           };
 
@@ -322,10 +323,6 @@ export default {
 
         return item;
       });
-
-
-      console.log();
-      console.log(data);
 
       return data;
     },
@@ -377,8 +374,6 @@ export default {
 
     // Какие колонки отображаются как видимые в окне настроек
     this.tempSettings = [...this.filteredHeaders.map((header) => header.value)];
-
-    console.log(this.tempSettings);
 
     // Колонки, которые мы можем добавить в список (исключим те, что уже добавлены)
     this.totalColumnOptions = JSON.parse(this.companyFields); 
@@ -437,29 +432,46 @@ export default {
           fields: this.headers.map((header) => header.value),
         })
         .then((response) => {
-          console.log(response);
-
           this.companies = Object.values(response.data);
-          console.log("read data");
-          console.log(this.companies);
-          
-          this.companies.forEach((company) => {
-            if (company.UF_CRM_FIELD_ABC) {
-              company.UF_CRM_FIELD_ABC = this.classNames[company.UF_CRM_FIELD_ABC];
-            }
-            
-            company.ASSIGNED_BY_ID = this.userMap[company.ASSIGNED_BY_ID];
-          });
 
-          this.loading = false;
+          let statusValuePromises = 
+            this.filteredHeaders
+            .filter(header => header.options.type == "crm_status")
+            .map(async header => ([ header.value, (await this.getStatusValues(header.value)).data]));
 
-          console.log("processed data");
-          console.log(this.companies);
+          Promise.all(statusValuePromises).then((values) => {
+            console.log("values");
+            console.log(values);
+            this.companies.forEach((company) => {
+              if (company.UF_CRM_FIELD_ABC) {
+                company.UF_CRM_FIELD_ABC = this.classNames[company.UF_CRM_FIELD_ABC];
+              }
+              
+              company.ASSIGNED_BY_ID = this.userMap[company.ASSIGNED_BY_ID];
+              
+              values.forEach((value) => {
+                let k = value[0];
+                let v = value[1];
+                
+                company[k] = v.find(item => item.STATUS_ID == company[k])?.NAME ?? "-";
+              });
+            });
 
-          this.$nextTick(function () {
-            BX24.fitWindow();
+            this.loading = false;
+
+            console.log("processed data");
+            console.log(this.companies);
+
+            this.$nextTick(function () {
+              BX24.fitWindow();
+            });
           });
         });
+    },
+    async getStatusValues(entityID) {
+      return await this.$http.post(`status_values`, {
+        entityID: entityID,
+      });
     },
     getColor(header) {
       if (header.sort_order > -1) return "blue";

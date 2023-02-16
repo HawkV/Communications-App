@@ -22,6 +22,7 @@ use App\Models\User;
 */
 Route::middleware(['connect'])->group(function () {
     Route::post('/data',  [BitrixController::class, 'getCompanies']);
+    Route::post('/status_values',  [BitrixController::class, 'getStatusValues']);
 
     Route::post('/', [BitrixController::class, 'show']);
 

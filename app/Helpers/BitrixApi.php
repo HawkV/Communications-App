@@ -84,6 +84,12 @@ class BitrixApi {
         return collect($result);
     }
 
+    public function getStatusValues($entityID) {
+        $result = $this->getResponse('crm.status.entity.items', ['entityId' => $entityID]);
+
+        return $result;
+    }
+
     public function getCurrentUser() {
         $result = $this->getResponse('user.current');
 
