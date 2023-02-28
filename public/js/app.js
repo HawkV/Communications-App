@@ -2251,6 +2251,7 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
           sortable: header.sortable,
           groupable: header.groupable,
           sort_order: header.sort_order,
+          column_id: header.column_id,
           options: {
             user_id: header.user_id,
             type: (_this$totalColumnOpti = _this.totalColumnOptions.find(function (item) {
@@ -2357,18 +2358,17 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
   methods: {
     toggleOrder: function toggleOrder(header) {
       if (header.sort_order == -1) {
-        header.sort_order = this.sortedHeaders.length;
+        this.setHeaderProperty(header, "sort_order", this.sortedHeaders.length);
         this.sortBy.push(header.value);
         this.sortDesc.push(header.sort_desc);
       } else if (header.sort_desc) {
         this.removeFromSort(header);
       } else {
-        header.sort_desc = !header.sort_desc;
+        this.setHeaderProperty(header, "sort_desc", !header.sort_desc);
         this.$set(this.sortDesc, header.sort_order, header.sort_desc);
       }
     },
     removeFromSort: function removeFromSort(header) {
-      header.sort_desc = false;
       this.headers.forEach(function (other) {
         if (other.sort_order > header.sort_order) {
           other.sort_order--;
@@ -2376,7 +2376,19 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
       });
       this.sortBy.splice(header.sort_order, 1);
       this.sortDesc.splice(header.sort_order, 1);
-      header.sort_order = -1;
+      this.setHeaderProperty(header, "sort_order", -1);
+      this.setHeaderProperty(header, "sort_desc", false);
+    },
+    setHeaderProperty: function setHeaderProperty(header, propertyName, propertyValue) {
+      console.log("setHeaderProperty");
+      console.log(header);
+      console.log(propertyValue);
+      console.log(propertyName);
+      var headerIndex = this.headers.findIndex(function (item) {
+        return item.column_id == header.column_id;
+      });
+      header[propertyName] = propertyValue;
+      this.headers[headerIndex][propertyName] = propertyValue;
     },
     checkCompanies: function checkCompanies() {
       var _this5 = this;

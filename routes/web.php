@@ -33,5 +33,5 @@ Route::middleware(['connect'])->group(function () {
 });
 
 Route::get('/test', function () {
-    return 'test1';
+    return 'test2';
 });

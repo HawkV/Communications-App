@@ -300,6 +300,7 @@ export default {
             sortable: header.sortable,
             groupable: header.groupable,
             sort_order: header.sort_order,
+            column_id: header.column_id,
             options: {
               user_id: header.user_id,
               type: this.totalColumnOptions.find(item => item.title == header.value)?.type,
@@ -395,21 +396,19 @@ export default {
   methods: {
     toggleOrder(header) {
       if (header.sort_order == -1) {
-        header.sort_order = this.sortedHeaders.length;
+        this.setHeaderProperty(header, "sort_order", this.sortedHeaders.length);
 
         this.sortBy.push(header.value);
         this.sortDesc.push(header.sort_desc);
       } else if (header.sort_desc) {
         this.removeFromSort(header);
       } else {
-        header.sort_desc = !header.sort_desc;
+        this.setHeaderProperty(header, "sort_desc",  !header.sort_desc);
 
         this.$set(this.sortDesc, header.sort_order, header.sort_desc);
       }
     },
     removeFromSort(header) {
-      header.sort_desc = false;
-
       this.headers.forEach((other) => {
         if (other.sort_order > header.sort_order) {
           other.sort_order--;
@@ -419,7 +418,19 @@ export default {
       this.sortBy.splice(header.sort_order, 1);
       this.sortDesc.splice(header.sort_order, 1);
 
-      header.sort_order = -1;
+      this.setHeaderProperty(header, "sort_order", -1);
+      this.setHeaderProperty(header, "sort_desc", false);
+    },
+    setHeaderProperty(header, propertyName, propertyValue) {
+      console.log("setHeaderProperty");
+      console.log(header);
+      console.log(propertyValue);
+      console.log(propertyName);
+      
+      let headerIndex = this.headers.findIndex((item) => item.column_id == header.column_id);
+    
+      header[propertyName] = propertyValue;
+      this.headers[headerIndex][propertyName] = propertyValue;
     },
     checkCompanies() {
       this.loading = true;
