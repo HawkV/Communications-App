@@ -112,7 +112,10 @@ class BitrixApi {
         $select = ['ID'];
         array_push($select, ...$fields);
 
-        $filter = ['ASSIGNED_BY_ID' => $userId];
+        $filter = [
+            'ASSIGNED_BY_ID' => $userId,
+            // 'UF_CRM_FIELD_ABC' => [127, 126, 125],
+        ];
         $companies =  $this->callBatch('crm.company.list', $select, $filter);
 
         $companyIDList = $companies->map(fn($company) => $company['ID']);
@@ -120,12 +123,12 @@ class BitrixApi {
         if ($companyIDList->count() == 0) {
             return [];
         }
-        
+
         // Запрашиваем список сделок по данным компаниям за данный период
         $select = ["ID", "COMPANY_ID"];
         $filter = [ 
             "COMPANY_ID" => $companyIDList->all(),
-            ">DATE_CREATE" => $minCommDate
+            ">DATE_CREATE" => $minCommDate,
         ];    
         $deals = $this->callBatch('crm.deal.list', $select, $filter);
 
@@ -166,28 +169,32 @@ class BitrixApi {
             return $map;
         }, collect([]));
 
-        // Запрашиваем список дел, связанных с выбранными контактами за данный период
-        $contactIDList = $contacts->map(fn($contact) => $contact['ID']);
-        $select = ["ID", "OWNER_ID"];
-        $filter = [
-            "OWNER_TYPE_ID" => 3, // Тип владельца дела - контакт
-            "OWNER_ID" => $contactIDList->all(),
-            ">CREATED" => $minCommDate
-        ];
-        $contactActivities = $this->callBatch('crm.activity.list', $select, $filter);
+        if ($contacts->count() != 0) {
+            // Запрашиваем список дел, созданных позже даты последней коммуникации, тип владельца которых - контакт 
+            $contactIDList = $contacts->map(fn($contact) => $contact['ID']);
+            $select = ["ID", "OWNER_ID"];
+            $filter = [
+                "OWNER_TYPE_ID" => 3, // Тип владельца дела - контакт
+                "OWNER_ID" => $contactIDList->all(),
+                ">CREATED" => $minCommDate
+            ];
+            $contactActivities = $this->callBatch('crm.activity.list', $select, $filter);
 
-        // Отбрасываем компании, у контактов которых есть такие дела
-        $contactActivityCompanies = $contactActivities->map(fn($activity) => $contactCompanies[$activity['OWNER_ID']] ?? []);
-        $companyIDList = $companyIDList->reject(fn($id) => $contactActivityCompanies->contains($id));
+            // Отбрасываем компании, у контактов которых есть такие дела
+            $contactActivityCompanies = $contactActivities->map(fn($activity) => $contactCompanies[$activity['OWNER_ID']] ?? []);
+            $companyIDList = $companyIDList->reject(fn($id) => $contactActivityCompanies->contains($id));
 
-        if ($companyIDList->count() == 0) {
-            return [];
+            if ($companyIDList->count() == 0) {
+                return [];
+            }
         }
 
         // Запрашиваем список сделок по отфильтрованным компаниям
         $select = ["ID", "COMPANY_ID"];
         $filter = [ 
-            "COMPANY_ID" => $companyIDList->all()
+            "COMPANY_ID" => $companyIDList->all(),
+            // "<= DATE_CREATE" => $minCommDate,
+            // "OPENED" => "Y",
         ];    
         $deals = $this->callBatch('crm.deal.list', $select, $filter);
 

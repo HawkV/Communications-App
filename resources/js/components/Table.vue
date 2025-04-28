@@ -65,6 +65,11 @@
 
       <v-col cols="12" sm="6" md="2">
         <v-btn block @click="checkCompanies" color="primary"> Поиск </v-btn>
+        <!--<v-btn block @click="downloadExcel" color="help"> Скачать Excel </v-btn>-->
+        
+        <download-excel :data="excelCompanies">
+          <v-btn block color="help"> Скачать excel </v-btn>
+        </download-excel>
       </v-col>
     </v-row>
     <!-- Таблица с данными -->
@@ -128,9 +133,6 @@
               </v-container>
             </v-card-text>
             <v-card-actions>
-              <download-excel :data="excelCompanies">
-                <v-btn color="blue darken-1" text> Скачать данные </v-btn>
-              </download-excel>
               <v-spacer></v-spacer>
               <v-btn color="red darken-1" text @click="cancelSettings"> Отменить </v-btn>
               <v-btn color="green darken-1" text @click="acceptSettings"> Применить </v-btn>
@@ -443,6 +445,8 @@ export default {
           fields: this.headers.map((header) => header.value),
         })
         .then((response) => {
+            console.log("response data");
+            console.log(response.data);
           this.companies = Object.values(response.data);
 
           let statusValuePromises = 
@@ -451,12 +455,8 @@ export default {
             .map(async header => ([ header.value, (await this.getStatusValues(header.value)).data]));
 
           Promise.all(statusValuePromises).then((values) => {
-            console.log("values");
-            console.log(values);
             this.companies.forEach((company) => {
-              if (company.UF_CRM_FIELD_ABC) {
-                company.UF_CRM_FIELD_ABC = this.classNames[company.UF_CRM_FIELD_ABC];
-              }
+              company.UF_CRM_FIELD_ABC = this.classNames[company.UF_CRM_FIELD_ABC];
               
               company.ASSIGNED_BY_ID = this.userMap[company.ASSIGNED_BY_ID];
               
@@ -468,15 +468,13 @@ export default {
               });
             });
 
-            this.loading = false;
-
-            console.log("processed data");
-            console.log(this.companies);
 
             this.$nextTick(function () {
               BX24.fitWindow();
             });
           });
+        }).finally(() => {
+          this.loading = false;
         });
     },
     async getStatusValues(entityID) {
@@ -691,5 +689,9 @@ tbody tr:nth-of-type(odd) {
 
 .inline-items {
   display: flex;
+}
+
+button {
+  margin-bottom: 1rem;
 }
 </style>

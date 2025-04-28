@@ -2202,6 +2202,8 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
 //
 //
 //
+//
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
   data: function data(vm) {
     return {
@@ -2402,6 +2404,8 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
           return header.value;
         })
       }).then(function (response) {
+        console.log("response data");
+        console.log(response.data);
         _this5.companies = Object.values(response.data);
 
         var statusValuePromises = _this5.filteredHeaders.filter(function (header) {
@@ -2434,14 +2438,8 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
         }());
 
         Promise.all(statusValuePromises).then(function (values) {
-          console.log("values");
-          console.log(values);
-
           _this5.companies.forEach(function (company) {
-            if (company.UF_CRM_FIELD_ABC) {
-              company.UF_CRM_FIELD_ABC = _this5.classNames[company.UF_CRM_FIELD_ABC];
-            }
-
+            company.UF_CRM_FIELD_ABC = _this5.classNames[company.UF_CRM_FIELD_ABC];
             company.ASSIGNED_BY_ID = _this5.userMap[company.ASSIGNED_BY_ID];
             values.forEach(function (value) {
               var _v$find$NAME, _v$find;
@@ -2454,14 +2452,12 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
             });
           });
 
-          _this5.loading = false;
-          console.log("processed data");
-          console.log(_this5.companies);
-
           _this5.$nextTick(function () {
             BX24.fitWindow();
           });
         });
+      })["finally"](function () {
+        _this5.loading = false;
       });
     },
     getStatusValues: function getStatusValues(entityID) {
@@ -2725,7 +2721,7 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, "\ntbody tr:nth-of-type(odd) {\r\n  background-color: rgba(0, 0, 0, 0.05);\n}\n.inline-items {\r\n  display: flex;\n}\r\n", ""]);
+exports.push([module.i, "\ntbody tr:nth-of-type(odd) {\r\n  background-color: rgba(0, 0, 0, 0.05);\n}\n.inline-items {\r\n  display: flex;\n}\nbutton {\r\n  margin-bottom: 1rem;\n}\r\n", ""]);
 
 // exports
 
@@ -5504,6 +5500,17 @@ var render = function() {
                   on: { click: _vm.checkCompanies }
                 },
                 [_vm._v(" Поиск ")]
+              ),
+              _vm._v(" "),
+              _c(
+                "download-excel",
+                { attrs: { data: _vm.excelCompanies } },
+                [
+                  _c("v-btn", { attrs: { block: "", color: "help" } }, [
+                    _vm._v(" Скачать excel ")
+                  ])
+                ],
+                1
               )
             ],
             1
@@ -5736,19 +5743,6 @@ var render = function() {
                       _c(
                         "v-card-actions",
                         [
-                          _c(
-                            "download-excel",
-                            { attrs: { data: _vm.excelCompanies } },
-                            [
-                              _c(
-                                "v-btn",
-                                { attrs: { color: "blue darken-1", text: "" } },
-                                [_vm._v(" Скачать данные ")]
-                              )
-                            ],
-                            1
-                          ),
-                          _vm._v(" "),
                           _c("v-spacer"),
                           _vm._v(" "),
                           _c(
